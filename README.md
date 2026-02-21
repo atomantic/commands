@@ -5,7 +5,7 @@ Curated slash commands for Claude Code. This repo is the source of truth — edi
 ## Quick Start
 
 ```bash
-git clone <this-repo> && cd commands && ./install.sh
+git clone git@github.com:atomantic/commands.git && cd commands && ./install.sh
 ```
 
 ## Commands
@@ -13,7 +13,7 @@ git clone <this-repo> && cd commands && ./install.sh
 | Command | Description |
 |---|---|
 | `/cam` | Commit and push all work with SemVer bump and changelog |
-| `/makegood` | Unified DevSecOps audit, remediation, PR, and Copilot review loop |
+| `/makegood` | Unified DevSecOps audit, remediation, PR, and Copilot review loop. **Heavy** — spawns 7+ subagents across two batches, then a remediation team. Expect significant token usage. |
 | `/pr` | Create branch, commit, push, and open MR/PR with Copilot review |
 | `/replan` | Review and clean up PLAN.md, extract docs from completed work |
 | `/rpr` | Resolve PR review feedback with parallel agents |
