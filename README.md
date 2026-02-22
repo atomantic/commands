@@ -13,6 +13,7 @@ git clone git@github.com:atomantic/commands.git && cd commands && ./install.sh
 | Command | Description |
 |---|---|
 | `/cam` | Commit and push all work with SemVer bump and changelog |
+| `/makegoals` | Scan codebase to infer project goals, clarify with user, and generate a `GOALS.md` |
 | `/makegood` | Unified DevSecOps audit, remediation, PR, and Copilot review loop. **Heavy** — spawns 7+ subagents across two batches, then a remediation team. Expect significant token usage. |
 | `/pr` | Create branch, commit, push, and open MR/PR with Copilot review |
 | `/replan` | Review and clean up PLAN.md, extract docs from completed work |

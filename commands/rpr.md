@@ -1,3 +1,7 @@
+---
+description: Resolve PR review feedback with parallel agents
+---
+
 # Resolve PR Review Feedback
 
 Address the latest code review feedback on the current branch's pull request using a team-based approach.

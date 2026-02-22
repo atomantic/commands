@@ -1,10 +1,8 @@
 ---
-name: /claude:optimize-md
-description: Audits and optimizes CLAUDE.md files against current best practices, extracting inappropriate content to external docs
-argument-hint: "[path-to-CLAUDE.md] (optional - defaults to ./CLAUDE.md)"
+description: Audit and optimize CLAUDE.md files against best practices, extracting inappropriate content to external docs
+argument-hint: "[path-to-CLAUDE.md] (defaults to ./CLAUDE.md)"
 allowed-tools: Read, Write, Edit, MultiEdit, LS, Glob, Grep, WebFetch
 ---
-<!-- OPTIMIZATION_TIMESTAMP: 2025-08-21 11:38:38 -->
 
 You are a CLAUDE.md optimization specialist. Your goal is to make CLAUDE.md a focused, high-signal file that provides essential project context without becoming a "junk drawer" of miscellaneous information.
 

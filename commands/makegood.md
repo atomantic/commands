@@ -1,7 +1,6 @@
 ---
-name: /makegood
 description: Unified DevSecOps audit, remediation, PR, and Copilot review loop with worktree isolation
-argument-hint: [optional: --scan-only, --no-merge, path filter, or specific focus areas]
+argument-hint: "[--scan-only] [--no-merge] [path filter or focus areas]"
 ---
 
 # MakeGood — Unified DevSecOps Pipeline

@@ -1,3 +1,7 @@
+---
+description: Review and clean up PLAN.md, extract docs from completed work
+---
+
 # Replan Command
 
 You are tasked with reviewing and updating the PLAN.md file to keep it clean, current, and action-oriented.

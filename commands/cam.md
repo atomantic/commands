@@ -1,3 +1,7 @@
+---
+description: Commit and push all work with SemVer bump and changelog
+---
+
 # Commit All My Work (cam)
 
 Commit and push all work from this session, updating documentation and version as needed.
