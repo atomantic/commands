@@ -42,9 +42,11 @@ After the PR is created, run the Copilot review-and-fix loop:
    - For **private repos**: Copilot won't auto-trigger — click the "Re-request review" button next to Copilot in the Reviewers sidebar to explicitly request it
    - If no Copilot reviewer is configured at all, inform the user and skip this loop
 
-3. **Wait for the review to complete**
-   - Poll by reloading the PR page or using `gh api graphql` to check for new review threads
-   - The review is complete when Copilot's review comment appears (e.g., "Copilot reviewed X out of Y changed files...")
+3. **Wait for the review to complete (BLOCKING — do not skip or proceed early)**
+   - Poll using `gh api graphql` to check the `reviews` array for a NEW review node (compare `submittedAt` timestamps or count)
+   - The review is complete when a new Copilot review node appears with a `submittedAt` after your latest push
+   - **Do NOT merge until the re-requested review has actually posted** — "Awaiting requested review" means it is still in progress
+   - Poll every 30-60 seconds; Copilot reviews typically take 2-5 minutes for large PRs
 
 4. **Check for unresolved comments**
    - Use `gh api graphql` to fetch all review threads and filter for `isResolved: false`
@@ -68,7 +70,8 @@ After the PR is created, run the Copilot review-and-fix loop:
    - **Re-request a Copilot review**: click the "Re-request review" button in the browser or use the GitHub API
    - Go back to step 3 (wait for review)
 
-6. **Merge the PR**
+6. **Merge the PR (only after final review completes)**
+   - **CRITICAL**: Only merge after the latest Copilot review has been submitted (a new review node exists in the GraphQL response). Never merge while "Awaiting requested review" is shown.
    - Once Copilot returns a review with **no new comments**, merge:
      ```
      gh pr merge <number> --merge
