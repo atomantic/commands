@@ -71,6 +71,14 @@ Launch 7 Explore agents in two batches. Each agent must report findings in this 
 - **[CRITICAL/HIGH/MEDIUM/LOW]** `file:line` - Description. Suggested fix: ... Complexity: Simple/Medium/Complex
 ```
 
+**IMPORTANT: Context requirement for audit agents.** When flagging an issue, agents MUST read at least 30 lines of surrounding context to confirm the issue is real. Common false positives to watch for:
+- A Promise `.then()` chain that appears "unawaited" but IS collected into an array and awaited via `Promise.all` downstream
+- A value that appears "unvalidated" but IS checked by a guard clause earlier in the function or by the caller
+- A pattern that looks like an anti-pattern in isolation but IS idiomatic for the specific framework or library being used
+- An `async` function called without `await` that IS intentionally fire-and-forget (the return value is unused by design)
+
+If the surrounding context shows the code is correct, do NOT flag it.
+
 ### Batch 1 (5 parallel Explore agents via Task tool):
 
 1. **Security & Secrets**
@@ -233,6 +241,17 @@ Foundation utilities available (if created):
 
 Findings to address:
 {filtered list of CRITICAL/HIGH/MEDIUM findings for this category}
+
+FINDING VALIDATION — verify before fixing:
+- Before fixing each finding, READ the file and at least 30 lines of surrounding
+  context to confirm the issue is genuine.
+- Check whether the flagged code is already correct (e.g., a Promise chain that
+  IS properly awaited downstream, a value that IS validated earlier in the function,
+  a pattern that IS idiomatic for the framework).
+- If the existing code is already correct, SKIP the fix and report it as a
+  false positive with a brief explanation of why the original code is fine.
+- Do not make changes that are semantically equivalent to the original code
+  (e.g., wrapping a .then() chain in an async IIFE adds noise without fixing anything).
 
 COMMIT STRATEGY — commit early and often:
 - After completing each logical group of related fixes, stage those files
