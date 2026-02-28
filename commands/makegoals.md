@@ -11,6 +11,32 @@ Parse `$ARGUMENTS` for:
 - **`--refresh`**: re-scan and update an existing GOALS.md rather than creating from scratch
 - **Focus hints**: e.g., "focus on API goals", "just the CLI"
 
+## Boundary Rule: GOALS.md vs PLAN.md
+
+**GOALS.md is strategic. PLAN.md is tactical.**
+
+GOALS.md answers: *Why does this project exist? What does success look like? What will we never do?*
+PLAN.md answers: *What are we building next? What's the backlog? What's done?*
+
+**GOALS.md must NEVER contain:**
+- Checkbox task lists (`- [ ] Add feature X`)
+- Implementation details or subtasks
+- Specific file paths, function names, or technical steps
+- "Current State" progress tables (that's PLAN.md's job)
+- Prioritized next-action lists
+
+**GOALS.md SHOULD contain:**
+- Mission and purpose (why this exists)
+- Core principles/tenets (non-negotiable design constraints)
+- Milestone definitions as **outcome descriptions** (what success looks like in prose, not task lists)
+- Non-goals (explicit boundaries)
+- Long-term vision (aspirational direction)
+- A footer link to PLAN.md for tactical details
+
+When milestones describe what "done" looks like, write outcome-oriented prose:
+- GOOD: "v1.0 means daily entry takes under 30 seconds and APY calculations are auditable across all edge cases"
+- BAD: "- [ ] Add date range buttons above charts / - [ ] Filter chart data to selected range"
+
 ## Phase 1: Discovery
 
 Gather signals about the project's purpose and intent from multiple sources. Launch these as parallel Explore agents:
@@ -57,11 +83,11 @@ Wait for all agents to complete.
 Consolidate the findings into a draft goals structure:
 
 1. **Project Purpose** — one-paragraph summary of what this project is and why it exists
-2. **Core Goals** — the 3-7 primary objectives the project is working toward (inferred from what exists + what's planned)
-3. **Non-Goals** — things the project explicitly does NOT aim to do (inferred from architectural boundaries, missing features that seem intentional, stated constraints)
-4. **Target Users** — who this is for (inferred from README, API design, CLI UX, documentation tone)
-5. **Current State** — brief assessment of where the project is now relative to its goals
-6. **Direction** — where the project appears to be heading based on recent work and plans
+2. **Core Goals / Tenets** — the 3-7 primary objectives or non-negotiable principles
+3. **Milestones** — outcome-oriented descriptions of what each version milestone means (NOT checkbox task lists — those go in PLAN.md)
+4. **Non-Goals** — things the project explicitly does NOT aim to do (inferred from architectural boundaries, missing features that seem intentional, stated constraints)
+5. **Target Users** — who this is for (inferred from README, API design, CLI UX, documentation tone)
+6. **Long-Term Vision** — aspirational direction in prose
 
 For each goal, assign a confidence level:
 - **HIGH** — directly stated in docs or clearly evidenced by code
@@ -100,63 +126,63 @@ Using the validated and refined information, generate `GOALS.md` at the repo roo
 ### Document Structure
 
 ```markdown
-# {Project Name} — Goals
+# GOALS.md
 
-> {One-sentence purpose statement}
+{Optional: tagline or one-sentence purpose}
 
-## Purpose
+---
+
+## Mission
 
 {One-paragraph expanded purpose statement explaining what the project is, why it exists, and the problem it solves.}
 
-## Core Goals
+---
 
-{Ordered by priority. Each goal has a clear, actionable description.}
+## Core Tenets
 
-### 1. {Goal Title}
-{2-3 sentence description of the goal, what success looks like, and why it matters.}
+{Non-negotiable principles that guide every decision. Numbered list.}
 
-### 2. {Goal Title}
-...
+1. **{Tenet}** - {Why it matters}
+2. ...
 
-## Secondary Goals
+---
 
-{Goals that are important but not primary drivers.}
+## Milestones
 
-- **{Goal}**: {Brief description}
+### v1.0 - {Milestone Name}
+
+{Outcome-oriented prose describing what this milestone means. What does "done" look like?
+Write 3-5 bullet points as outcome descriptions, NOT checkbox task lists.
+Example: "Engine correctness — every fund type produces accurate calculations across all edge cases."}
+
+- **{Outcome area}** - {What success looks like in this area}
 - ...
+
+### v2.0 - {Milestone Name}
+
+{Same format — outcomes, not tasks.}
+
+---
+
+## Long-Term Vision
+
+{Aspirational direction in prose. What does the ultimate success state look like?}
+
+---
 
 ## Non-Goals
 
 {Explicit boundaries — things this project intentionally does NOT do.}
 
-- **{Non-goal}**: {Why this is out of scope}
+- **{Non-goal}** - {Why this is out of scope}
 - ...
 
-## Target Users
+---
 
-{Who this project serves and how they use it.}
-
-## Current State
-
-{Honest assessment of where the project stands relative to its goals.}
-
-| Goal | Status | Notes |
-|------|--------|-------|
-| {Goal 1} | {Not Started / In Progress / Complete} | {Brief note} |
-| ... | ... | ... |
-
-## Direction
-
-{Where the project is heading next, based on plans and recent momentum.}
-
-## Success Criteria
-
-{If the user opted in during Phase 3f. Measurable outcomes per goal.}
-
-| Goal | Metric | Target |
-|------|--------|--------|
-| ... | ... | ... |
+For the tactical backlog and current work items, see [PLAN.md](./PLAN.md).
 ```
+
+**Important:** The template above intentionally omits "Current State" tables and "Direction" sections — those are tactical concerns that belong in PLAN.md. If the user asks for them, add a brief (1-2 sentence) summary that points to PLAN.md rather than duplicating the detail.
 
 ### Refresh Mode (`--refresh`)
 
@@ -166,20 +192,21 @@ If `--refresh` was passed and `GOALS.md` already exists:
 3. Identify goals whose status has changed (new progress, completed, abandoned)
 4. Present changes to the user for confirmation
 5. Update the document in-place, preserving user-written content where possible
+6. If any checkbox task lists are found in the existing GOALS.md, flag them and offer to move them to PLAN.md
 
 ## Phase 5: Finalize
 
 1. Write the `GOALS.md` file to the repo root
-2. If `PLAN.md` exists, add a reference link: `See [GOALS.md](./GOALS.md) for project goals and direction.` (only if not already present)
-3. Print a summary:
+2. If `PLAN.md` exists, ensure it has a reference link to GOALS.md (only if not already present)
+3. If checkbox task lists were found in an existing GOALS.md during `--refresh`, offer to migrate them to PLAN.md
+4. Print a summary:
    ```
    GOALS.md created with:
-   - {N} core goals
-   - {M} secondary goals
+   - {N} core tenets
+   - {M} milestones (outcome-oriented)
    - {K} non-goals
-   - Status: {current state summary}
    ```
-4. Do NOT commit — let the user review and commit when ready (suggest using `/cam` to commit)
+5. Do NOT commit — let the user review and commit when ready (suggest using `/cam` to commit)
 
 ## Notes
 
@@ -189,3 +216,4 @@ If `--refresh` was passed and `GOALS.md` already exists:
 - Preserve the user's voice — if they provide rephrased goals, use their wording verbatim
 - If the project is brand new with minimal code, lean more heavily on user input and less on codebase inference
 - If `gh` CLI is not authenticated, skip issue/PR scanning gracefully — don't halt
+- **Never put checkbox task lists in GOALS.md** — if you discover tactical items during scanning, note them for PLAN.md but keep them out of GOALS.md
