@@ -37,6 +37,7 @@ After the PR is created, run the Copilot review-and-fix loop:
    - Navigate to the PR URL using `browser_navigate`
    - Confirm the page shows the user is authenticated (user avatar/menu visible, NOT "Sign in" link)
    - **BLOCKING**: If the browser is NOT authenticated, STOP and ask the user to log into GitHub in the Playwright browser before continuing. You MUST have an authenticated browser session to re-request Copilot reviews. Do NOT proceed without it.
+   - **IMPORTANT**: When using `browser_snapshot`, do NOT pass a `filename` parameter — this writes files into the repo working directory. Either omit `filename` (returns inline) or use a `/tmp/` path. Never leave snapshot artifacts in the codebase.
 
 2. **Ensure a Copilot review is running**
    - For **public repos**: Copilot review triggers automatically on PR creation — verify by checking the sidebar for "Awaiting requested review from Copilot" or a completed review
@@ -71,7 +72,14 @@ After the PR is created, run the Copilot review-and-fix loop:
      - Commit the version bump
      - Push all commits to remote
    - **Re-request a Copilot review** (MANDATORY — do NOT skip this step):
-     - Use the Playwright browser to click the re-request review button (the circular arrow icon next to Copilot in the Reviewers sidebar)
+     - Use `browser_run_code` to click the re-request button reliably without needing to parse large snapshots:
+       ```
+       async (page) => {
+         const btn = page.getByRole('button', { name: 'Re-request review' });
+         if (await btn.isVisible()) { await btn.click(); return 'Clicked'; }
+         return 'Not found';
+       }
+       ```
      - Copilot is a GitHub App — `gh api` reviewer requests do NOT work for it. The browser click is the ONLY reliable method.
      - After clicking, verify the sidebar changes to "Awaiting requested review from Copilot"
    - **Go back to step 3** (wait for new review) — this loop MUST repeat until Copilot returns a review with zero new comments. Never merge after only one round of fixes.
