@@ -21,7 +21,8 @@ git clone git@github.com:atomantic/commands.git; cd commands; .\install.ps1
 | `/cam` | Commit and push all work with SemVer bump and changelog |
 | `/makegoals` | Scan codebase to infer project goals, clarify with user, and generate a `GOALS.md` |
 | `/makegood` | Unified DevSecOps audit, remediation, PR, and Copilot review loop. **Heavy** — spawns 7+ subagents across two batches, then a remediation team. Expect significant token usage. |
-| `/pr` | Create branch, commit, push, and open MR/PR with Copilot review |
+| `/pr` | Commit, push, open PR with self-review and Copilot review-fix loop, then merge |
+| `/release` | Create a release PR from source to target branch with pre-release checks and Copilot review loop |
 | `/replan` | Review and clean up PLAN.md, extract docs from completed work |
 | `/rpr` | Resolve PR review feedback with parallel agents |
 | `/claude:optimize-md` | Audit and optimize CLAUDE.md files against best practices |

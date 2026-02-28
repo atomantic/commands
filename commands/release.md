@@ -1,27 +1,36 @@
 ---
-description: Commit, push, and open a PR against the repo's default branch
+description: Create a release PR using the project's documented release workflow
 ---
 
-## Detect Branches
+## Detect Release Workflow
 
-1. **Detect the default branch** — run `gh repo view --json defaultBranchRef -q '.defaultBranchRef.name'` to get the repo's default branch (e.g., `main`, `master`, `develop`)
-2. **Determine the current branch** — use `git branch --show-current`
-3. If you're already on the default branch, commit to a new feature branch named after the work being done
-4. The PR will target the **default branch** as base
+Before doing anything, determine the project's source and target branches for releases. Do NOT hardcode branch names. Instead, discover them:
 
-Print: `PR flow: {current_branch} → {default_branch}`
+1. **Source branch** — run `gh repo view --json defaultBranchRef -q '.defaultBranchRef.name'` to get the repo's default branch
+2. **Target branch** — determine by reading (in priority order):
+   - **GitHub Actions workflows** — check `.github/workflows/release.yml` (or similar) for `on: push: branches:` to find the branch that triggers the release pipeline
+   - **Project CLAUDE.md** — look for git workflow sections, branch descriptions, or release instructions
+   - **Versioning docs** — check `docs/VERSIONING.md`, `CONTRIBUTING.md`, or `RELEASING.md`
+   - **Branch convention** — if a `release` branch exists, the target is `release`; otherwise ask the user
 
-## Commit and Push
+Print the detected workflow: `Detected release flow: {source} → {target}`
 
-- Commit all changes to the current branch
-- Keep commit message concise and do not use co-author information
-- Push the branch to remote: `git pull --rebase --autostash && git push -u origin {current_branch}`
+If ambiguous, ask the user to confirm before proceeding.
+
+## Pre-Release Checks
+
+1. **Ensure you're on the source branch** — checkout if needed
+2. **Pull latest** — `git pull --rebase --autostash`
+3. **Run tests** — execute the project's test suite (check CLAUDE.md or package.json for the command)
+4. **Run build** — execute the project's build command if one exists
+5. **Check version** — read `package.json` (or equivalent) version. Confirm with user whether the current version is correct for this release, or if a bump is needed
+6. **Check changelog** — look for `.changelog/`, `CHANGELOG.md`, or similar. Summarize what's documented for this release. If the changelog has placeholder dates (e.g., `YYYY-MM-DD`), note it but don't modify — CI handles substitution
 
 ## Local Code Review (before opening PR)
 
-Before creating the PR, perform a self-review of all changes that will be included:
+Perform a self-review of all changes between source and target:
 
-1. Run `git diff {default_branch}...{current_branch}` to see the full diff
+1. Run `git diff {target}...{source}` to see the full diff
 2. Review the diff for:
    - Leftover debug code (console.log, debugger, TODO/FIXME/HACK comments added in this change)
    - Hardcoded secrets, API keys, or credentials
@@ -30,14 +39,16 @@ Before creating the PR, perform a self-review of all changes that will be includ
    - Inconsistent naming or style that deviates from the project's conventions
    - Missing error handling at system boundaries (user input, external APIs)
    - Obvious logic bugs or off-by-one errors
-   - Overly broad changes that should be split into separate PRs
-3. If issues are found, fix them and amend/recommit before proceeding
+3. If issues are found, fix them, commit, and push before proceeding
 4. Summarize the review findings (even if clean) so the user can see what was checked
 
-## Open the PR
+## Open the Release PR
 
-- Create a PR from `{current_branch}` to `{default_branch}`
-- Create a rich PR description — no co-author or "generated with" messages
+- Push the source branch to remote
+- Create a PR from `{source}` to `{target}`
+- Title: `Release v{version}` (read version from package.json or equivalent)
+- Body: include the changelog content for this version if available, otherwise summarize commits since last release
+- Keep the description clean — no co-author or "generated with" messages
 
 ## Copilot Code Review Loop
 
@@ -107,4 +118,9 @@ After the PR is created, run the Copilot review-and-fix loop:
      gh pr merge <number> --merge
      ```
    - Verify the merge succeeded: `gh pr view <number> --json state,mergedAt`
-   - Report the final status to the user
+
+## Post-Merge
+
+- Report the final status including version, PR URL, and merge state
+- Remind the user to check for the GitHub release once CI completes (if the project uses automated releases)
+- Switch back to the source branch locally: `git checkout {source} && git pull --rebase --autostash`
