@@ -19,6 +19,7 @@ git clone git@github.com:atomantic/commands.git; cd commands; .\install.ps1
 | Command | Description |
 |---|---|
 | `/cam` | Commit and push all work with SemVer bump and changelog |
+| `/fpr` | Commit, push to fork, and open a PR against the upstream repo |
 | `/makegoals` | Scan codebase to infer project goals, clarify with user, and generate a `GOALS.md` |
 | `/makegood` | Unified DevSecOps audit, remediation, PR, and Copilot review loop. **Heavy** — spawns 7+ subagents across two batches, then a remediation team. Expect significant token usage. |
 | `/pr` | Commit, push, open PR with self-review and Copilot review-fix loop, then merge |
