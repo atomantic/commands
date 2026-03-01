@@ -37,14 +37,15 @@ If ambiguous, ask the user to confirm before proceeding.
 2. **Bump version**: Run `npm version <major|minor|patch> --no-git-tag-version` to update `package.json` and `package-lock.json`
 
 3. **Finalize changelog**:
-   - If `.changelogs/NEXT.md` exists:
-     - Rename it to `.changelogs/v{new_version}.md`
+   - Check for a changelog directory: `.changelogs/` or `.changelog/` (use whichever exists)
+   - If `{changelog_dir}/NEXT.md` exists:
+     - Rename it to `{changelog_dir}/v{new_version}.md`
      - Replace the `# Unreleased Changes` header with `# Release v{new_version}`
      - Add `Released: YYYY-MM-DD` with today's date
      - Add a `## Full Changelog` section with: `**Full Diff**: https://github.com/{owner}/{repo}/compare/v{prev}...v{new}`
    - If `NEXT.md` does not exist:
      - Generate a changelog from commit history since the last tag
-     - Write it to `.changelogs/v{new_version}.md`
+     - Write it to `{changelog_dir}/v{new_version}.md`
 
 4. **Commit the release**: Stage `package.json`, `package-lock.json`, and the changelog file. Commit with message `chore: release v{new_version}`
 

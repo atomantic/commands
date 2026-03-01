@@ -15,7 +15,8 @@ Commit and push all work from this session, updating documentation as needed.
    - if there are files that should be added to the .gitignore that are not yet there, ensure we have proper .gitignore coverage
 
 2. **Update the changelog**:
-   - If a `.changelogs/` directory exists, append to `.changelogs/NEXT.md`
+   - Check for a changelog directory: `.changelogs/` or `.changelog/` (use whichever exists)
+   - If found, append to `{changelog_dir}/NEXT.md`
    - If `NEXT.md` doesn't exist yet, create it with this template:
      ```markdown
      # Unreleased Changes
@@ -29,7 +30,7 @@ Commit and push all work from this session, updating documentation as needed.
      ## Removed
      ```
    - Add a concise entry describing the changes under the appropriate section (Added, Changed, Fixed, Removed)
-   - If no `.changelogs/` directory exists, skip this step
+   - If no changelog directory exists, skip this step
 
 3. **Update PLAN.md** (if exists):
    - Mark completed items as done
