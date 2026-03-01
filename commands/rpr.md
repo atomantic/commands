@@ -8,9 +8,9 @@ Address the latest code review feedback on the current branch's pull request usi
 
 ## Steps
 
-1. **Get the current PR**: Use `gh pr view --json number,url,reviewDecision,reviews,headRefName` to find the PR for this branch. Parse owner/name from `gh repo view --json owner,name`.
+1. **Get the current PR and determine repo ownership**: Use `gh pr view --json number,url,reviewDecision,reviews,headRefName,baseRefName` to find the PR for this branch. Parse owner/name from `gh repo view --json owner,name`. Also check the PR's base repository owner — if the PR targets an upstream repo you don't own (i.e., a fork-to-upstream PR), note this as `is_fork_pr=true`. You can detect this by comparing the PR URL's owner against your authenticated user (`gh api user --jq .login`).
 
-2. **Request Copilot code review** (if not already requested): Follow the "Requesting GitHub Copilot Code Review" section below to request a review, then poll until the review is complete before proceeding.
+2. **Request Copilot code review** (only if `is_fork_pr=false`): Follow the "Requesting GitHub Copilot Code Review" section below to request a review, then poll until the review is complete before proceeding. **Skip this step entirely for fork-to-upstream PRs** — you don't have permission to request reviewers on repos you don't own.
 
 3. **Fetch review comments**: Use `gh api graphql` with stdin JSON to get all unresolved review threads. **CRITICAL: Do NOT use `$variables` in GraphQL queries — shell expansion consumes `$` signs.** Always inline values and pipe JSON via stdin:
    ```bash
@@ -38,21 +38,16 @@ Address the latest code review feedback on the current branch's pull request usi
 
 5. **Run tests**: Run the project's test suite to verify all changes pass. Do not proceed if tests fail — fix issues first.
 
-6. **Bump the version and commit together** (SemVer):
-   - Review all changes made in this round and classify them:
-     - **Patch** (fix): most review feedback is bug fixes, style, or improvements — use patch
-     - **Minor** (feature): only if review feedback led to adding new functionality
-     - **Major** (breaking): only if review feedback required an incompatible API change
-   - Run `npm version <major|minor|patch> --no-git-tag-version` to bump `package.json` and `package-lock.json`
-   - Stage all changed files **plus** `package.json` and `package-lock.json` together in a **single commit**
-   - Commit with a descriptive message summarizing what was addressed, then push to branch. Do not include co-author info.
+6. **Commit and push**:
+   - Stage all changed files and commit with a descriptive message summarizing what was addressed. Do not include co-author info.
+   - Push to the branch.
 
 8. **Resolve conversations**: For each addressed thread, resolve it via GraphQL mutation using stdin JSON. **Never use `$variables` in the query — inline the thread ID directly**:
    ```bash
    echo '{"query":"mutation { resolveReviewThread(input: {threadId: \"THREAD_ID_HERE\"}) { thread { id isResolved } } }"}' | gh api graphql --input -
    ```
 
-9. **Request another Copilot review**: After pushing fixes, request a fresh Copilot code review and repeat from step 3 until the review passes clean.
+9. **Request another Copilot review** (only if `is_fork_pr=false`): After pushing fixes, request a fresh Copilot code review and repeat from step 3 until the review passes clean. **Skip for fork-to-upstream PRs.**
 
 10. **Report summary**: Print a table of all threads addressed with file, line, and a brief description of the fix.
 
