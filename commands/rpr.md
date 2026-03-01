@@ -53,53 +53,32 @@ Address the latest code review feedback on the current branch's pull request usi
 
 ## GraphQL Shell Escaping Rules
 
-The `gh api graphql -f query='...'` approach **does not work** in this environment because `$` is consumed by shell expansion. All of these approaches fail:
-- Single-quoted inline queries
-- Shell variable assignment
-- File + `$(cat)` subshell
-- Escaped `\$` dollar signs
-
-**The only reliable method**: Inline all values into the query string and pipe the full JSON request body via stdin:
+When using `gh api graphql -f query='...'`, **do NOT use `$variableName` syntax** in GraphQL queries — shell expansion consumes `$` signs. Instead, inline all values directly into the query string:
 ```bash
-echo '{"query":"mutation { resolveReviewThread(input: {threadId: \"PRRT_abc123\"}) { thread { id isResolved } } }"}' | gh api graphql --input -
+gh api graphql -f query='mutation { resolveReviewThread(input: {threadId: "PRRT_abc123"}) { thread { id isResolved } } }'
 ```
 
 ## Requesting GitHub Copilot Code Review
 
 **WARNING**: Do NOT use `@copilot review` in a PR comment — this triggers the **Copilot coding agent** which opens a new PR instead of performing a code review.
 
-### Step 1: Try the API first
+### Request via API
 ```bash
-gh api repos/OWNER/REPO/pulls/PR_NUM/requested_reviewers --method POST --input - <<< '{"reviewers":["copilot-pull-request-reviewer"]}'
+gh api repos/OWNER/REPO/pulls/PR_NUM/requested_reviewers -f 'reviewers[]=copilot-pull-request-reviewer[bot]'
 ```
 
-If this returns 422 "not a collaborator", fall through to Step 2.
+**CRITICAL**: The reviewer name MUST include the `[bot]` suffix. Without it (e.g., `copilot-pull-request-reviewer`), the API returns a 422 "not a collaborator" error.
 
-### Step 2: Use Playwright (browser-based)
+Verify the request was accepted by checking that `Copilot` appears in the response's `requested_reviewers` array.
 
-The API may fail because `copilot-pull-request-reviewer` is a GitHub App, not a user collaborator. Use Playwright MCP to request the review through the GitHub UI:
+### Poll for review completion
 
-1. **Navigate to the PR**: `browser_navigate` to `https://github.com/OWNER/REPO/pull/PR_NUM`
-2. **Check if logged in**: If the page shows a login form, navigate to `https://github.com/login`, tell the user "Please log in to GitHub in the browser" and **wait for the user to confirm they are logged in** before proceeding
-3. **Open the Reviewers dropdown**: `browser_click` on the "Reviewers" gear button in the PR sidebar
-4. **Click the Copilot reviewer**: The dropdown shows a "Suggestions" section with "Copilot code review" and a "Request" button next to it. The Request button has an element ID like `#suggested-reviewier-NNNN` (note: GitHub has a typo — `reviewier` not `reviewer`). Click it using `browser_evaluate`:
-   ```js
-   () => { document.querySelector('button[name="suggested_reviewer_id"]')?.click(); }
-   ```
-5. **Verify**: The sidebar should now show "Awaiting requested review from Copilot"
-
-### Step 3: Poll for review completion
+Poll every 30 seconds using GraphQL to check for a new review with a `submittedAt` timestamp after the request:
 ```bash
-# Poll every 15 seconds until reviews appear
-gh api repos/OWNER/REPO/pulls/PR_NUM/reviews --jq '.[] | "\(.user.login): \(.state)"'
+gh api graphql -f query='{ repository(owner: "OWNER", name: "REPO") { pullRequest(number: PR_NUM) { reviews(last: 3) { nodes { state body author { login } submittedAt } } reviewThreads(first: 100) { nodes { id isResolved comments(first: 3) { nodes { body path line author { login } } } } } } } }'
 ```
 
-Also check for inline review comments:
-```bash
-gh api repos/OWNER/REPO/pulls/PR_NUM/comments --jq '.[] | "\(.user.login) [\(.path):\(.line)]: \(.body[:120])"'
-```
-
-Copilot reviews typically take 30-90 seconds. Poll every 15 seconds until results appear.
+Copilot reviews typically take 60-120 seconds. The review is complete when a new `copilot-pull-request-reviewer` review node appears.
 
 ## Notes
 
