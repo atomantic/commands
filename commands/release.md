@@ -23,8 +23,30 @@ If ambiguous, ask the user to confirm before proceeding.
 2. **Pull latest** — `git pull --rebase --autostash`
 3. **Run tests** — execute the project's test suite (check CLAUDE.md or package.json for the command)
 4. **Run build** — execute the project's build command if one exists
-5. **Check version** — read `package.json` (or equivalent) version. Confirm with user whether the current version is correct for this release, or if a bump is needed
-6. **Check changelog** — look for `.changelog/`, `CHANGELOG.md`, or similar. Summarize what's documented for this release. If the changelog has placeholder dates (e.g., `YYYY-MM-DD`), note it but don't modify — CI handles substitution
+
+## Determine Version and Finalize Changelog
+
+1. **Determine version bump** from commits since the last git tag:
+   - Scan commit messages for conventional commit prefixes:
+     - `breaking:` → **major** bump
+     - `feat:` → **minor** bump
+     - `fix:`, `chore:`, `docs:`, `refactor:`, `perf:`, `style:`, `test:`, `ci:` → **patch** bump
+   - Use the **highest applicable level** across all commits
+   - Present the proposed version to the user for confirmation
+
+2. **Bump version**: Run `npm version <major|minor|patch> --no-git-tag-version` to update `package.json` and `package-lock.json`
+
+3. **Finalize changelog**:
+   - If `.changelogs/NEXT.md` exists:
+     - Rename it to `.changelogs/v{new_version}.md`
+     - Replace the `# Unreleased Changes` header with `# Release v{new_version}`
+     - Add `Released: YYYY-MM-DD` with today's date
+     - Add a `## Full Changelog` section with: `**Full Diff**: https://github.com/{owner}/{repo}/compare/v{prev}...v{new}`
+   - If `NEXT.md` does not exist:
+     - Generate a changelog from commit history since the last tag
+     - Write it to `.changelogs/v{new_version}.md`
+
+4. **Commit the release**: Stage `package.json`, `package-lock.json`, and the changelog file. Commit with message `chore: release v{new_version}`
 
 ## Local Code Review (before opening PR)
 
@@ -88,10 +110,8 @@ After the PR is created, run the Copilot review-and-fix loop:
      ```bash
      gh api graphql -f query='mutation { resolveReviewThread(input: {threadId: "THREAD_ID"}) { thread { id isResolved } } }'
      ```
-   - After all threads are resolved:
-     - Bump the patch version (`npm version patch --no-git-tag-version` or equivalent)
-     - Commit the version bump
-     - Push all commits to remote
+   - After all threads are resolved, push all commits to remote
+   - Do NOT bump the version for review fixes — the version was already set
    - **Re-request a Copilot review** via API (same command as step 1)
    - **Go back to step 2** (wait for new review) — this loop MUST repeat until Copilot returns a review with zero new comments. Never merge after only one round of fixes.
 
