@@ -6,6 +6,12 @@ slashdo is the successor to this repo, published as an npm package with multi-en
 
 ## Migrate
 
+**1. Remove old commands:**
+```bash
+./uninstall.sh
+```
+
+**2. Install slashdo:**
 ```bash
 npx slash-do@latest
 ```
