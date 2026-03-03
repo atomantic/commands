@@ -8,7 +8,8 @@ slashdo is the successor to this repo, published as an npm package with multi-en
 
 **1. Remove old commands:**
 ```bash
-./uninstall.sh
+./uninstall.sh        # macOS/Linux
+.\uninstall.ps1       # Windows PowerShell
 ```
 
 **2. Install slashdo:**
