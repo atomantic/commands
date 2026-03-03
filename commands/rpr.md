@@ -51,12 +51,7 @@ Address the latest code review feedback on the current branch's pull request usi
 
 10. **Report summary**: Print a table of all threads addressed with file, line, and a brief description of the fix.
 
-## GraphQL Shell Escaping Rules
-
-When using `gh api graphql -f query='...'`, **do NOT use `$variableName` syntax** in GraphQL queries — shell expansion consumes `$` signs. Instead, inline all values directly into the query string:
-```bash
-gh api graphql -f query='mutation { resolveReviewThread(input: {threadId: "PRRT_abc123"}) { thread { id isResolved } } }'
-```
+!`cat ~/.claude/lib/graphql-escaping.md`
 
 ## Requesting GitHub Copilot Code Review
 

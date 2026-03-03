@@ -4,6 +4,8 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 SRC_DIR="$REPO_DIR/commands"
 TARGET_DIR="$HOME/.claude/commands"
+LIB_SRC_DIR="$REPO_DIR/lib"
+LIB_TARGET_DIR="$HOME/.claude/lib"
 
 usage() {
     printf 'Usage: %s [options] [command ...]\n\n' "$(basename "$0")"
@@ -163,6 +165,40 @@ do_install() {
             updated=$((updated + 1))
         fi
     done < <(collect_files ${filter_names[@]+"${filter_names[@]}"})
+
+    # Install lib files
+    if [ -d "$LIB_SRC_DIR" ]; then
+        local lib_file lib_rel lib_target lib_target_dir
+        while IFS= read -r -d '' lib_file; do
+            lib_rel="${lib_file#"$LIB_SRC_DIR"/}"
+            lib_target="$LIB_TARGET_DIR/$lib_rel"
+            lib_target_dir="$(dirname "$lib_target")"
+
+            if [ ! -f "$lib_target" ]; then
+                if [ "$dry_run" -eq 1 ]; then
+                    printf 'would install: lib/%s\n' "$lib_rel"
+                else
+                    mkdir -p "$lib_target_dir"
+                    cp "$lib_file" "$lib_target"
+                    printf 'installed: lib/%s\n' "$lib_rel"
+                fi
+                installed=$((installed + 1))
+            elif diff -q "$lib_file" "$lib_target" >/dev/null 2>&1; then
+                printf 'up to date: lib/%s\n' "$lib_rel"
+                up_to_date=$((up_to_date + 1))
+            else
+                if [ "$dry_run" -eq 1 ]; then
+                    printf 'would update: lib/%s\n' "$lib_rel"
+                    diff -u "$lib_target" "$lib_file" || true
+                    printf '\n'
+                else
+                    cp "$lib_file" "$lib_target"
+                    printf 'updated: lib/%s\n' "$lib_rel"
+                fi
+                updated=$((updated + 1))
+            fi
+        done < <(find "$LIB_SRC_DIR" -name '*.md' -type f -print0 | sort -z)
+    fi
 
     printf '\n%d installed, %d updated, %d up to date\n' "$installed" "$updated" "$up_to_date"
 }

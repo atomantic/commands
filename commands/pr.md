@@ -24,32 +24,7 @@ Before creating the PR, perform a thorough self-review. Read each changed file �
 1. Run `git diff {default_branch}...{current_branch}` to see the full diff
 2. **For each changed file**, read the full file (not just the diff hunks) and check:
 
-   **Hygiene**
-   - Leftover debug code (console.log without emoji prefix, debugger, TODO/FIXME/HACK)
-   - Hardcoded secrets, API keys, or credentials
-   - Files that shouldn't be committed (.env, node_modules, build artifacts)
-   - Overly broad changes that should be split into separate PRs
-
-   **Imports & references**
-   - Every symbol used in the file is imported (missing imports → runtime crash)
-   - No unused imports introduced by the changes
-
-   **Runtime correctness**
-   - State/variables that are declared but never updated or only partially wired up (e.g. a state setter that's never called with `true`)
-   - Side effects during React render (setState, navigation, mutations outside useEffect)
-   - Off-by-one errors, null/undefined access without guards
-
-   **Resource management**
-   - Event listeners, socket handlers, subscriptions, and timers are cleaned up on unmount/teardown
-   - useEffect cleanup functions remove everything the effect sets up
-
-   **Validation & consistency**
-   - New endpoints/schemas match validation standards of similar existing endpoints (check for field limits, required fields, types)
-   - New API routes have the same error handling patterns as existing routes
-
-   **Style & conventions**
-   - Naming and patterns consistent with the rest of the codebase
-   - Missing error handling at system boundaries (user input, external APIs)
+!`cat ~/.claude/lib/code-review-checklist.md`
 
 3. If issues are found, fix them and amend/recommit before proceeding
 4. Summarize the review findings (even if clean) so the user can see what was checked
@@ -59,52 +34,8 @@ Before creating the PR, perform a thorough self-review. Read each changed file �
 - Create a PR from `{current_branch}` to `{default_branch}`
 - Create a rich PR description — no co-author or "generated with" messages
 
-## Copilot Code Review Loop
+**IMPORTANT**: During each fix cycle in the Copilot review loop below, after fixing all review comments and before pushing, also bump the patch version (`npm version patch --no-git-tag-version` or equivalent) and commit the version bump.
 
-After the PR is created, run the Copilot review-and-fix loop:
+!`cat ~/.claude/lib/copilot-review-loop.md`
 
-1. **Request a Copilot review via API**
-   ```bash
-   gh api repos/OWNER/REPO/pulls/PR_NUM/requested_reviewers -f 'reviewers[]=copilot-pull-request-reviewer[bot]'
-   ```
-   **CRITICAL**: The reviewer name MUST include the `[bot]` suffix. Without it, the API returns a 422 "not a collaborator" error.
-   - For **public repos**: Copilot review may trigger automatically on PR creation — check if a review already exists before requesting
-   - If no Copilot reviewer is configured at all, inform the user and skip this loop
-
-2. **Wait for the review to complete (BLOCKING — do not skip or proceed early)**
-   - Record the current review count and latest `submittedAt` timestamp before waiting
-   - Poll using `gh api graphql` to check the `reviews` array for a NEW review node (compare `submittedAt` timestamps or count):
-     ```bash
-     gh api graphql -f query='{ repository(owner: "OWNER", name: "REPO") { pullRequest(number: PR_NUM) { reviews(last: 3) { nodes { state body author { login } submittedAt } } reviewThreads(first: 100) { nodes { id isResolved comments(first: 3) { nodes { body path line author { login } } } } } } } }'
-     ```
-   - The review is complete when a new Copilot review node appears with a `submittedAt` after your latest push
-   - **Do NOT merge until the re-requested review has actually posted** — "Awaiting requested review" means it is still in progress
-   - Poll every 60 seconds; Copilot reviews can take **10-15 minutes** for large diffs — do NOT give up early
-   - **Continue polling for at least 15 minutes** before concluding the review won't arrive
-   - If no review appears after 15 minutes, **ask the user** whether to continue waiting, re-request the review, or skip — **never proceed without user approval when the review loop fails**
-   - If the review request silently disappears (reviewRequests becomes empty without a review being posted), re-request the review once and resume polling
-
-3. **Check for unresolved comments**
-   - Filter review threads for `isResolved: false`
-   - Also count the total comments in the latest review (check the review body for "generated N comments")
-   - If the latest review has **zero comments** (body says "generated 0 comments" or no unresolved threads exist): the PR is clean
-   - If **there are unresolved comments**: proceed to fix them (step 4)
-
-4. **Fix all unresolved review comments**
-   For each unresolved thread:
-   - Read the referenced file and understand the feedback
-   - Make the code fix
-   - Run the build (`npm run build` or the project's build command)
-   - If build passes, commit with message `address review: <summary of changes>`
-   - Resolve the thread via GraphQL mutation:
-     ```bash
-     gh api graphql -f query='mutation { resolveReviewThread(input: {threadId: "THREAD_ID"}) { thread { id isResolved } } }'
-     ```
-   - After all threads are resolved:
-     - Bump the patch version (`npm version patch --no-git-tag-version` or equivalent)
-     - Commit the version bump
-     - Push all commits to remote
-   - **Re-request a Copilot review** via API (same command as step 1)
-   - **Go back to step 2** (wait for new review) — this loop MUST repeat until Copilot returns a review with zero new comments. Never merge after only one round of fixes.
-
-5. **Report the final status** to the user including PR URL and review outcome
+**Report the final status** to the user including PR URL and review outcome.

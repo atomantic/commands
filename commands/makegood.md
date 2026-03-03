@@ -569,14 +569,7 @@ If merge fails (e.g., branch protection, merge conflicts from a prior PR):
 - **Browser not authenticated**: use `AskUserQuestion` to ask the user to log in — never skip this or close the browser
 - **Merge conflict after prior PR merged**: rebase the branch onto the updated default branch, push with `--force-with-lease`, re-run CI
 
-## GraphQL Shell Escaping Rules
-
-The `gh api graphql -f query='...'` approach does NOT work because `$` is consumed by shell expansion. **The only reliable method**: inline all values into the query string and pipe the full JSON request body via stdin:
-```bash
-echo '{"query":"mutation { resolveReviewThread(input: {threadId: \"THREAD_ID\"}) { thread { id isResolved } } }"}' | gh api graphql --input -
-```
-
-Never use `$variables` in GraphQL queries. Never use `-f query=` with dollar signs. Always use stdin JSON piping.
+!`cat ~/.claude/lib/graphql-escaping.md`
 
 ## Notes
 

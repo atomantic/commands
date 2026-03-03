@@ -66,14 +66,9 @@ Before committing, ensure the fork is up to date with upstream:
    git fetch upstream {UPSTREAM_DEFAULT_BRANCH}
    ```
 2. Run `git diff upstream/{UPSTREAM_DEFAULT_BRANCH}...{CURRENT_BRANCH}` to see the full diff against upstream
-3. Review the diff for:
-   - Leftover debug code (console.log, debugger, TODO/FIXME/HACK comments added in this change)
-   - Hardcoded secrets, API keys, or credentials
-   - Files that shouldn't be committed (.env, node_modules, build artifacts, large binaries)
-   - Unused imports or variables introduced by the changes
-   - Inconsistent naming or style that deviates from the upstream project's conventions
-   - Missing error handling at system boundaries
-   - Obvious logic bugs or off-by-one errors
+3. **For each changed file**, read the full file (not just the diff hunks) and check:
+
+!`cat ~/.claude/lib/code-review-checklist.md`
 4. If issues are found, fix them, recommit, and push before proceeding
 5. Summarize the review findings so the user can see what was checked
 

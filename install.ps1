@@ -22,9 +22,11 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$RepoDir   = $PSScriptRoot
-$SrcDir    = Join-Path $RepoDir 'commands'
-$TargetDir = Join-Path (Join-Path $HOME '.claude') 'commands'
+$RepoDir      = $PSScriptRoot
+$SrcDir       = Join-Path $RepoDir 'commands'
+$TargetDir    = Join-Path (Join-Path $HOME '.claude') 'commands'
+$LibSrcDir    = Join-Path $RepoDir 'lib'
+$LibTargetDir = Join-Path (Join-Path $HOME '.claude') 'lib'
 
 function Show-Usage {
     $script = Split-Path -Leaf $PSCommandPath
@@ -206,6 +208,45 @@ function Invoke-Install {
                 Write-Host "updated: /$name"
             }
             $updated++
+        }
+    }
+
+    # Install lib files
+    if (Test-Path -LiteralPath $LibSrcDir) {
+        $libFiles = Get-ChildItem -LiteralPath $LibSrcDir -Filter '*.md' -File -Recurse |
+                    Sort-Object FullName |
+                    Select-Object -ExpandProperty FullName
+
+        foreach ($libFile in $libFiles) {
+            $libRel       = $libFile.Substring($LibSrcDir.Length + 1) -replace '\\', '/'
+            $libTarget    = Join-Path $LibTargetDir ($libRel -replace '/', '\')
+            $libParentDir = Split-Path -Parent $libTarget
+
+            if (-not (Test-Path -LiteralPath $libTarget)) {
+                if ($IsDryRun) {
+                    Write-Host "would install: lib/$libRel"
+                } else {
+                    if (-not (Test-Path -LiteralPath $libParentDir)) {
+                        New-Item -ItemType Directory -Path $libParentDir -Force | Out-Null
+                    }
+                    Copy-Item -LiteralPath $libFile -Destination $libTarget -Force
+                    Write-Host "installed: lib/$libRel"
+                }
+                $installed++
+            } elseif (Compare-Files $libFile $libTarget) {
+                Write-Host "up to date: lib/$libRel"
+                $upToDate++
+            } else {
+                if ($IsDryRun) {
+                    Write-Host "would update: lib/$libRel"
+                    Show-FileDiff -Target $libTarget -Source $libFile
+                    Write-Host ''
+                } else {
+                    Copy-Item -LiteralPath $libFile -Destination $libTarget -Force
+                    Write-Host "updated: lib/$libRel"
+                }
+                $updated++
+            }
         }
     }
 
