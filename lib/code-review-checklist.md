@@ -17,9 +17,31 @@
    - Event listeners, socket handlers, subscriptions, and timers are cleaned up on unmount/teardown
    - useEffect cleanup functions remove everything the effect sets up
 
+   **HTTP status codes & error classification**
+   - Service functions that throw generic `Error` for client-caused conditions (not found, invalid input) — these bubble as 500 when they should be 400/404. Use the project's error class (e.g., `ServerError`, `HttpError`, `createError`) with explicit status codes
+   - Consistent error responses across similar endpoints — if one validates, all should
+
+   **API & URL safety**
+   - User-supplied values interpolated into URL paths must use `encodeURIComponent()` — even if the UI restricts input, the API should be safe independently
+   - Route params (`:name`, `:id`) passed to services without validation — add format checks (regex, length limits) at the route level
+
+   **Data exposure**
+   - API responses returning full objects that contain sensitive fields (secrets, tokens, passwords) — destructure and omit before sending. Check ALL response paths (GET, PUT, POST) not just one
+   - Comments/docs claiming data is never exposed while the code path does expose it
+
+   **Input handling**
+   - Trimming values where whitespace is significant (API keys, tokens, passwords, base64) — only trim identifiers/names, not secret values
+   - Swallowed errors (empty `.catch(() => {})`) that hide failures from users — at minimum show a toast/notification on failure
+
    **Validation & consistency**
    - New endpoints/schemas match validation standards of similar existing endpoints (check for field limits, required fields, types)
    - New API routes have the same error handling patterns as existing routes
+   - If validation exists on one endpoint for a param, the same param on other endpoints needs the same validation
+   - Schema fields that accept values the rest of the system can't handle (e.g., managedSecrets accepting any string when the sync endpoint requires `[A-Z0-9_]`)
+
+   **Configuration & hardcoding**
+   - Hardcoded values (usernames, org names, limits) when a config field or env var already exists for that purpose — use the existing config
+   - Dead config fields that nothing reads — either wire them up or remove them
 
    **Style & conventions**
    - Naming and patterns consistent with the rest of the codebase
