@@ -11,7 +11,7 @@ jobs:
     name: Lint
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install ShellCheck
         run: sudo apt-get install -y shellcheck
@@ -28,7 +28,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Test install script runs
         run: bash install.sh --dry-run 2>/dev/null || bash install.sh --help 2>/dev/null || echo "Install script checked"
